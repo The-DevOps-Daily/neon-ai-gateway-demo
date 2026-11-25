@@ -16,7 +16,7 @@ A [Neon Function](https://neon.com) that calls large language models through the
 
 The gateway is OpenAI-compatible. The function POSTs to `${NEON_AI_GATEWAY_BASE_URL}/ai-gateway/mlflow/v1/chat/completions` with `Authorization: Bearer ${NEON_AI_GATEWAY_TOKEN}` and a `model` field. Both variables are injected by `neon deploy` when `aiGateway: true` is set in `neon.ts`.
 
-> **Token-limit gotcha.** GPT-5 models want `max_completion_tokens` (and enough of it, since they spend tokens reasoning); other models want `max_tokens`. `gpt-oss-*` rejects `max_completion_tokens` outright. `src/index.ts` normalizes this per model family, which is what lets a caller swap models freely.
+> **Token-limit gotcha.** GPT-5 and newer GPT models want `max_completion_tokens` (and enough of it, since they spend tokens reasoning); other models want `max_tokens`. `gpt-oss-*` rejects `max_completion_tokens` outright. `src/index.ts` normalizes this per model family, which is what lets a caller swap models freely.
 
 Model IDs use dashes, not dots: `gemini-2-5-flash`, not `gemini-2.5-flash`.
 
@@ -30,11 +30,11 @@ neon deploy          # deploy the function; injects the gateway credential
 
 # then, against the printed function URL:
 curl -X POST "$URL/chat" -d '{"model":"claude-haiku-4-5","prompt":"Name the capital of France."}'
-curl -X POST "$URL/chat" -d '{"models":["not-a-real-model","gpt-5-nano"],"prompt":"hi"}'  # fallback
+curl -X POST "$URL/chat" -d '{"models":["not-a-real-model","gpt-6-luna"],"prompt":"hi"}'  # fallback
 curl "$URL/usage"
 ```
 
-Test with cheap models (`gpt-5-nano`, `gpt-oss-20b`, `claude-haiku-4-5`, `gemini-2-5-flash`) and short prompts to keep spend to cents.
+Test with cheap models (`gpt-6-luna`, `gpt-oss-20b`, `claude-haiku-4-5`, `gemini-2-5-flash`) and short prompts to keep spend to cents.
 
 ## Per-branch spend
 
@@ -46,3 +46,7 @@ neon deploy --branch pr-preview
 # calls made against the branch URL log to the branch; GET /usage on the branch
 # shows only the branch's tokens, main is untouched
 ```
+
+## Model retirement (updated 25 November 2026)
+
+OpenAI ends API access to GPT-5, GPT-5 mini, GPT-5 nano, GPT-5 pro, o3 and o3-pro on 11 December 2026. This demo used `gpt-5-nano`; it now uses `gpt-6-luna` ($0.10 input, $0.50 output per million tokens in the gateway catalog). The recorded runs in the companion posts still show `gpt-5-nano`. The skill files under `.agents/` come from [neondatabase/agent-skills](https://github.com/neondatabase/agent-skills) (pinned in `skills-lock.json`) and may still name older models.

@@ -20,17 +20,17 @@ const GATEWAY_TOKEN = process.env.NEON_AI_GATEWAY_TOKEN;
 // A curated slice of the catalog across three providers, reached with the SAME
 // credential. The gateway exposes ~25 models; these are cheap ones to demo with.
 const MODELS = [
-  { id: 'gpt-5-nano', provider: 'openai' },
+  { id: 'gpt-6-luna', provider: 'openai' },
   { id: 'gpt-oss-20b', provider: 'openai' },
   { id: 'claude-haiku-4-5', provider: 'anthropic' },
   { id: 'gemini-2-5-flash', provider: 'google' },
 ];
 
-// Token-limit parameter differs by family: GPT-5 models want max_completion_tokens
+// Token-limit parameter differs by family: GPT-5 and newer GPT models want max_completion_tokens
 // (and enough of it, since they spend tokens reasoning), everything else wants
 // max_tokens. Normalizing this here is what lets a caller swap models freely.
 function tokenLimit(model: string, maxTokens: number) {
-  return model.startsWith('gpt-5')
+  return /^gpt-\d/.test(model)
     ? { max_completion_tokens: maxTokens }
     : { max_tokens: maxTokens };
 }
@@ -86,7 +86,7 @@ app.post('/chat', async (c) => {
   }>();
   const prompt = body.prompt ?? 'Say hello in one short sentence.';
   const maxTokens = body.maxTokens ?? 512;
-  const chain = body.models ?? [body.model ?? 'gpt-5-nano'];
+  const chain = body.models ?? [body.model ?? 'gpt-6-luna'];
 
   const tried: { model: string; status: number; error?: string }[] = [];
   for (const model of chain) {
